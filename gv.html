@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sensei CRM — Hồ sơ giáo viên</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+:root {
+  --red:#C8102E;--red-bg:#fff0f3;--red-sub:rgba(200,16,46,0.08);
+  --gold:#D4AF37;--gold-bg:rgba(212,175,55,0.12);
+  --green:#1D9E75;--green-bg:#E1F5EE;
+  --amber:#BA7517;--amber-bg:#FAEEDA;
+  --purple:#534AB7;--purple-bg:#EEEDFE;
+  --blue:#185FA5;--blue-bg:#E6F1FB;
+  --dark:#0f0505;--dark2:#1a0808;--dark3:#220c0c;
+  --bg:#f7f7f7;--line:#efefef;--line2:#e8e8e8;
+  --t1:#1a1a1a;--t2:#555;--t3:#999;
+  --font:'Be Vietnam Pro',sans-serif;--r:12px;--rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100vh;background:var(--dark);font-family:var(--font);font-size:14px;color:var(--t1);overscroll-behavior:none}
+#loading{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:14px;transition:opacity .4s}
+.ld-logo{width:54px;height:54px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;animation:ldp 1.5s ease-in-out infinite}
+.ld-dot{width:32px;height:32px;border-radius:50%;background:var(--red)}
+.ld-txt{font-size:12px;color:rgba(255,255,255,.35);letter-spacing:.08em;font-weight:500}
+@keyframes ldp{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+#app{max-width:430px;margin:0 auto;min-height:100vh;background:#fff;display:flex;flex-direction:column;opacity:0;transition:opacity .3s}
+#app.ready{opacity:1}
+
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--red);position:sticky;top:0;z-index:20}
+.back{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:16px;color:white;border:none;cursor:pointer;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:7px;flex:1}
+.bc{width:26px;height:26px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bci{width:15px;height:15px;border-radius:50%;background:var(--red)}
+.bn{font-size:13px;font-weight:700;color:white}
+.tid{font-size:10px;color:rgba(255,255,255,.55)}
+
+.hero{padding:14px 16px 12px;background:linear-gradient(180deg,var(--dark2),var(--dark3))}
+.hrow{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.av{width:54px;height:54px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:white;flex-shrink:0;border:2.5px solid rgba(200,16,46,.45);position:relative}
+.av-r{position:absolute;inset:-4px;border-radius:50%;border:1px solid rgba(200,16,46,.2)}
+.hname{font-size:16px;font-weight:700;color:white}
+.hsub{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px;line-height:1.5}
+.bdgs{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+.bdg{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px}
+.b-elite{background:rgba(212,175,55,.2);color:var(--gold);border:.5px solid rgba(212,175,55,.4)}
+.b-pro{background:rgba(29,158,117,.2);color:#5DCAA5;border:.5px solid rgba(29,158,117,.4)}
+.b-sensei{background:rgba(83,74,183,.2);color:#AFA9EC;border:.5px solid rgba(83,74,183,.4)}
+.b-improve{background:rgba(186,117,23,.2);color:#FAC775;border:.5px solid rgba(186,117,23,.4)}
+.b-warn{background:rgba(200,16,46,.22);color:#ff8888;border:.5px solid rgba(200,16,46,.4)}
+.b-cap{background:rgba(24,95,165,.2);color:#85B7EB;border:.5px solid rgba(24,95,165,.4)}
+
+.score-block{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.sb-main{background:rgba(255,255,255,.07);border-radius:9px;padding:11px 13px;border:.5px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px}
+.sb-score{font-size:36px;font-weight:700;line-height:1}
+.sb-label{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px}
+.sb-rank{font-size:11px;font-weight:700;margin-top:4px}
+.sb-right{display:flex;flex-direction:column;gap:5px}
+.sb-mini{background:rgba(255,255,255,.06);border-radius:7px;padding:7px 10px;border:.5px solid rgba(255,255,255,.05)}
+.sm-v{font-size:15px;font-weight:700;color:rgba(255,255,255,.9)}
+.sm-l{font-size:10px;color:rgba(255,255,255,.35);margin-top:1px}
+
+.kpi3{display:grid;grid-template-columns:1fr 1fr 1fr;background:#0f0505;border-bottom:1px solid rgba(200,16,46,.1)}
+.ki{padding:11px 4px;text-align:center;border-right:.5px solid rgba(255,255,255,.04)}
+.ki:last-child{border-right:none}
+.kv{font-size:20px;font-weight:700}.kl{font-size:10px;color:rgba(255,255,255,.3);margin-top:2px}
+
+.tabs{display:flex;gap:4px;padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--line);position:sticky;top:50px;z-index:19}
+.tab{flex:1;padding:7px 4px;border-radius:7px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;border:none;color:var(--t3);background:transparent;font-family:var(--font);transition:all .2s}
+.tab.active{background:var(--red);color:white}
+
+.panel{display:none}.panel.active{display:block}
+.sec{border-top:1px solid var(--line)}
+.sech{padding:12px 16px 6px;display:flex;justify-content:space-between;align-items:center}
+.sect{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.07em}
+.seca{font-size:12px;color:var(--red);cursor:pointer;font-weight:600}
+
+.bars{padding:4px 16px 12px;display:flex;flex-direction:column;gap:9px}
+.br{display:flex;align-items:center;gap:8px}
+.bl{font-size:12px;color:var(--t2);min-width:100px}
+.bt{flex:1;height:5px;background:#f0f0f0;border-radius:99px;overflow:hidden}
+.bf{height:100%;border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.bp{font-size:12px;font-weight:700;min-width:40px;text-align:right}
+
+/* SCORE TABLE */
+.stable{margin:4px 16px 14px;border:.5px solid var(--line);border-radius:var(--r);overflow:hidden}
+.str{display:grid;grid-template-columns:1fr 55px 50px;padding:9px 12px;border-bottom:.5px solid var(--line);font-size:12px;align-items:center}
+.str:last-child{border-bottom:none}
+.str.hdr{background:var(--bg);font-size:10px;color:var(--t3);font-weight:700}
+.str.total{background:var(--red-bg);border-top:1px solid rgba(200,16,46,.15)}
+.sc-name{font-weight:600;color:var(--t1)}
+.sc-max{color:var(--t3);text-align:center;font-size:11px}
+.sc-val{font-weight:700;text-align:right}
+
+/* TỶLỆ BOX */
+.ratio-grid{padding:4px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ratio-item{background:var(--bg);border:.5px solid var(--line);border-radius:var(--r);padding:12px 14px;text-align:center}
+.ratio-val{font-size:26px;font-weight:700}
+.ratio-label{font-size:11px;color:var(--t2);margin-top:4px;line-height:1.4}
+.ratio-sub{font-size:10px;color:var(--t3);margin-top:3px}
+.ratio-vs{font-size:11px;font-weight:600;margin-top:5px;padding:2px 8px;border-radius:99px;display:inline-block}
+
+/* CLASS LIST */
+.class-list{padding:4px 16px 12px;display:flex;flex-direction:column;gap:7px}
+.cl{background:var(--bg);border:.5px solid var(--line);border-radius:var(--rs);padding:9px 12px;display:flex;align-items:center;gap:10px}
+.cl-bdg{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--red-bg);color:var(--red);border:.5px solid rgba(200,16,46,.2);flex-shrink:0}
+.cl-info{flex:1}
+.cl-name{font-size:12px;font-weight:700;color:var(--t1)}
+.cl-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.cl-att{font-size:13px;font-weight:700}
+
+/* SALARY SECTION */
+.salary-locked{margin:4px 16px 14px;padding:16px;background:var(--bg);border:.5px solid var(--line);border-radius:var(--r);text-align:center}
+.lock-icon{font-size:28px;margin-bottom:8px}
+.lock-txt{font-size:13px;color:var(--t2);line-height:1.6}
+.lock-role{font-size:11px;color:var(--t3);margin-top:4px}
+
+.salary-box{margin:4px 16px 14px}
+.sal-header{background:linear-gradient(135deg,var(--dark2),var(--dark3));border-radius:var(--r) var(--r) 0 0;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.sal-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.7)}
+.sal-amount{font-size:22px;font-weight:700;color:var(--gold)}
+.sal-body{background:var(--bg);border:.5px solid var(--line);border-top:none;border-radius:0 0 var(--r) var(--r);padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sal-item{background:white;border:.5px solid var(--line);border-radius:var(--rs);padding:8px 10px}
+.sal-label{font-size:10px;color:var(--t3);margin-bottom:3px}
+.sal-val{font-size:13px;font-weight:700;color:var(--t1)}
+.sal-val.green{color:var(--green)}.sal-val.red{color:var(--red)}.sal-val.gold{color:#9a7a00}
+
+/* HISTORY */
+.hist-month{margin:4px 16px 8px}
+.hm-title{font-size:11px;font-weight:700;color:var(--t3);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.hm-line{flex:1;height:.5px;background:var(--line)}
+.hm-items{display:flex;flex-direction:column;gap:5px}
+.hm-item{background:var(--bg);border:.5px solid var(--line);border-radius:var(--rs);padding:9px 12px;display:flex;align-items:center;gap:9px}
+.hm-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.hm-body{flex:1}
+.hm-txt{font-size:12px;color:var(--t1);font-weight:500}
+.hm-sub{font-size:10px;color:var(--t3);margin-top:2px}
+.hm-tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;flex-shrink:0}
+
+/* KPI HISTORY CHART */
+.kpi-history{margin:4px 16px 14px;background:var(--bg);border:.5px solid var(--line);border-radius:var(--r);overflow:hidden}
+.kh-head{padding:10px 14px;background:white;border-bottom:.5px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.kh-title{font-size:12px;font-weight:700;color:var(--t1)}
+.kh-avg{font-size:11px;color:var(--t3)}
+.kh-bars{padding:10px 14px;display:flex;gap:6px;align-items:flex-end;height:80px}
+.khb{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.khb-bar{width:100%;border-radius:4px 4px 0 0;transition:height .6s cubic-bezier(.4,0,.2,1)}
+.khb-val{font-size:9px;font-weight:700}
+.khb-month{font-size:9px;color:var(--t3)}
+
+/* AI BOX */
+.aibox{margin:4px 16px 14px;border-radius:var(--r);overflow:hidden;border:.5px solid rgba(83,74,183,.3)}
+.aih{padding:11px 14px;background:linear-gradient(135deg,#1a1040,#2a1860);display:flex;align-items:center;gap:9px}
+.aiico{width:30px;height:30px;border-radius:50%;background:rgba(175,169,236,.15);border:.5px solid rgba(175,169,236,.3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.aitl{font-size:13px;font-weight:700;color:#CECBF6}
+.aits{font-size:10px;color:rgba(175,169,236,.6);margin-top:1px}
+.aibody{background:#f5f4ff}
+.aii{padding:10px 14px;border-bottom:.5px solid rgba(83,74,183,.1);display:flex;gap:9px;align-items:flex-start}
+.aii:last-child{border-bottom:none}
+.aibu{width:24px;height:24px;border-radius:50%;background:rgba(83,74,183,.12);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:1px}
+.aic{flex:1}
+.ailb{font-size:11px;font-weight:700;color:var(--purple);margin-bottom:3px}
+.aitxt{font-size:12px;color:var(--t2);line-height:1.55}.aitxt strong{color:var(--t1);font-weight:700}
+.aitag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:99px;margin-top:5px;display:inline-block}
+.aitag.high{background:rgba(200,16,46,.1);color:var(--red)}
+.aitag.mid{background:var(--amber-bg);color:var(--amber)}
+.aitag.low{background:var(--green-bg);color:var(--green)}
+
+.actions{padding:12px 14px 16px;display:flex;gap:8px}
+.btn{flex:1;padding:11px 6px;border-radius:var(--rs);font-size:13px;font-weight:700;text-align:center;cursor:pointer;border:none;font-family:var(--font);transition:opacity .15s,transform .1s}
+.btn:active{opacity:.85;transform:scale(.98)}
+.btnr{background:var(--red);color:white}
+.btno{background:white;color:var(--red);border:1.5px solid var(--red)}
+.btng{background:var(--bg);color:var(--t2);border:.5px solid var(--line)}
+.footer{padding:10px 16px;background:var(--bg);border-top:1px solid var(--line);display:flex;align-items:center;gap:7px}
+.fc{width:18px;height:18px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fi{width:10px;height:10px;border-radius:50%;background:white}
+.ft{font-size:11px;color:var(--t3)}.ft span{color:var(--red);font-weight:700}
+.errbox{margin:40px 20px;padding:20px;background:var(--red-bg);border:1px solid rgba(200,16,46,.3);border-radius:var(--r);text-align:center}
+.errbox h3{color:var(--red);margin-bottom:8px}.errbox p{font-size:13px;color:var(--t2);line-height:1.6}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="ld-logo"><div class="ld-dot"></div></div>
+  <div class="ld-txt">SENSEI NIHONGO · CRM</div>
+</div>
+<div id="app">
+  <div class="topbar">
+    <button class="back" onclick="history.back()">&#8592;</button>
+    <div class="brand"><div class="bc"><div class="bci"></div></div><div class="bn">Sensei Nihongo</div></div>
+    <div class="tid" id="tid">GV-????</div>
+  </div>
+  <div id="root"></div>
+</div>
+<script>
+// ─────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJi8mcZzaAT1YweQ3zPhWjlA0Dr9B-S2GoOj-6nenAKiJcxYoLdO0t-9Ezf3nBSZPF4Q/exec';
+
+// RANK RULES — GV
+const GV_RANKS = [
+  { key:'elite',   label:'Sensei Elite',      min:90, cls:'b-elite',   color:'#D4AF37' },
+  { key:'pro',     label:'Sensei Pro',         min:75, cls:'b-pro',    color:'#5DCAA5' },
+  { key:'sensei',  label:'Sensei',             min:60, cls:'b-sensei', color:'#AFA9EC' },
+  { key:'improve', label:'Cần cải thiện',      min:40, cls:'b-improve',color:'#FAC775' },
+  { key:'warn',    label:'Cảnh báo',           min:0,  cls:'b-warn',   color:'#ff8888' },
+];
+
+// PHÂN QUYỀN — đọc từ URL param ?role=admin|hr|gv
+function getRole() {
+  const p = new URLSearchParams(location.search);
+  return p.get('role') || 'gv'; // default: GV
+}
+
+function canSeeSalary(role) {
+  return ['admin','hr','gv'].includes(role); // GV xem lương mình, admin/hr xem tất
+}
+
+function canSeeHeSo(role) {
+  return ['admin','hr'].includes(role); // chỉ admin/hr xem hệ số
+}
+
+function getGVRank(score) {
+  for (const r of GV_RANKS) { if (score >= r.min) return r; }
+  return GV_RANKS[4];
+}
+
+function fmtM(n) { return n ? Number(n).toLocaleString('vi-VN') + 'đ' : '0đ'; }
+function fmtP(n) { return Math.round(n) + '%'; }
+function ini(name) {
+  if (!name) return 'GV';
+  const p = name.trim().split(' ');
+  return p.length >= 2 ? (p[p.length-2][0] + p[p.length-1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
+}
+
+// ─────────────────────────────────────────
+// AI INSIGHTS CHO GV
+// ─────────────────────────────────────────
+function gvInsights(gv, rank) {
+  const ins = [];
+  const att = gv.att_rate || 0;
+  const jlpt = gv.jlpt_rate || 0;
+  const renewal = gv.renewal_rate || 0;
+  const nps = gv.nps_avg || 0;
+  const score = gv.total_score || 0;
+
+  if (score >= 90) {
+    ins.push({ icon:'🏆', pr:'low', lb:'GV xuất sắc — nhân rộng phương pháp', txt:`Điểm <strong>${score}đ</strong> — top Elite. Đề xuất chia sẻ phương pháp dạy với GV khác trong buổi họp tháng tới. Ưu tiên phân lớp chiến lược cho GV này.`, tag:'Phát triển' });
+  } else if (score < 60) {
+    ins.push({ icon:'⚠️', pr:'high', lb:'Điểm thấp — cần coaching khẩn', txt:`Điểm <strong>${score}đ</strong> dưới ngưỡng Sensei. R&D cần có buổi coaching 1-1 trong tuần này. Nếu không cải thiện sau 2 tháng, xem xét lại hợp đồng.`, tag:'Khẩn cấp' });
+  }
+
+  if (att < 80) {
+    ins.push({ icon:'📉', pr:'high', lb:'HV chuyên cần thấp — dấu hiệu dạy kém hấp dẫn', txt:`Chuyên cần HV chỉ <strong>${fmtP(att)}</strong>. Có thể do nội dung khó, GV thiếu tương tác, hoặc giờ học không phù hợp. R&D cần dự giờ 1 buổi để đánh giá.`, tag:'Cần xem xét' });
+  }
+
+  if (jlpt < 70) {
+    ins.push({ icon:'🎯', pr:'mid', lb:'Tỷ lệ đỗ JLPT thấp hơn trung bình', txt:`Đỗ JLPT <strong>${fmtP(jlpt)}</strong> — thấp hơn target 70%. Ảnh hưởng trực tiếp đến retention HV. GV cần cải thiện cách luyện đề và chiến lược thi.`, tag:'Cần cải thiện' });
+  }
+
+  if (renewal >= 65) {
+    ins.push({ icon:'♻️', pr:'low', lb:'Tỷ lệ tái tục cao — GV được HV tin tưởng', txt:`<strong>${fmtP(renewal)}</strong> HV tái tục sau khi học với GV này — cao hơn trung bình trường. Đây là chỉ số chất lượng quan trọng nhất.`, tag:'Điểm mạnh' });
+  } else if (renewal < 50) {
+    ins.push({ icon:'📊', pr:'mid', lb:'Tỷ lệ tái tục thấp', txt:`Chỉ <strong>${fmtP(renewal)}</strong> HV tái tục. CS cần khảo sát HV đã nghỉ xem lý do. Có thể do kỳ vọng không khớp hoặc chất lượng giảng dạy.`, tag:'Cần phân tích' });
+  }
+
+  if (nps >= 4.5) {
+    ins.push({ icon:'⭐', pr:'low', lb:'NPS xuất sắc — HV rất hài lòng', txt:`NPS <strong>${nps.toFixed(1)}/5</strong> — HV đánh giá rất cao. Đề xuất dùng feedback HV làm nội dung marketing cho Sensei.`, tag:'Tận dụng' });
+  }
+
+  return ins.slice(0, 4);
+}
+
+// ─────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────
+function render(gv) {
+  const role = getRole();
+  const rank = getGVRank(gv.total_score || 0);
+  const insights = gvInsights(gv, rank);
+  document.getElementById('tid').textContent = gv.teacher_id || 'GV-????';
+
+  // Score color
+  const sc = gv.total_score || 0;
+  const scColor = sc >= 90 ? '#D4AF37' : sc >= 75 ? '#5DCAA5' : sc >= 60 ? '#AFA9EC' : sc >= 40 ? '#FAC775' : '#ff8888';
+
+  // KPI bars
+  const barsH = `
+    <div class="br"><div class="bl">HV chuyên cần</div><div class="bt"><div class="bf" style="width:${gv.att_rate||0}%;background:#1D9E75"></div></div><div class="bp" style="color:#1D9E75">${fmtP(gv.att_rate||0)}</div></div>
+    <div class="br"><div class="bl">Bài tập tốt</div><div class="bt"><div class="bf" style="width:${gv.bt_rate||0}%;background:#534AB7"></div></div><div class="bp" style="color:#534AB7">${fmtP(gv.bt_rate||0)}</div></div>
+    <div class="br"><div class="bl">Đầu ra JLPT</div><div class="bt"><div class="bf" style="width:${gv.jlpt_rate||0}%;background:#D4AF37"></div></div><div class="bp" style="color:#D4AF37">${fmtP(gv.jlpt_rate||0)}</div></div>
+    <div class="br"><div class="bl">Feedback NPS</div><div class="bt"><div class="bf" style="width:${(gv.nps_avg||0)*20}%;background:#185FA5"></div></div><div class="bp" style="color:#185FA5">${(gv.nps_avg||0).toFixed(1)}/5</div></div>
+    <div class="br"><div class="bl">Đúng giờ</div><div class="bt"><div class="bf" style="width:${gv.ontime_rate||0}%;background:#888"></div></div><div class="bp" style="color:#888">${fmtP(gv.ontime_rate||0)}</div></div>`;
+
+  // Score table
+  const scoreH = `
+    <div class="stable">
+      <div class="str hdr"><div>Tiêu chí</div><div class="sc-max">Tối đa</div><div class="sc-val">Điểm</div></div>
+      <div class="str"><div class="sc-name">HV chuyên cần</div><div class="sc-max">25đ</div><div class="sc-val" style="color:#1D9E75">${gv.d1||0}đ</div></div>
+      <div class="str"><div class="sc-name">Bài tập tốt</div><div class="sc-max">20đ</div><div class="sc-val" style="color:#534AB7">${gv.d2||0}đ</div></div>
+      <div class="str"><div class="sc-name">Đầu ra JLPT</div><div class="sc-max">25đ</div><div class="sc-val" style="color:#D4AF37">${gv.d3||0}đ</div></div>
+      <div class="str"><div class="sc-name">Feedback NPS</div><div class="sc-max">20đ</div><div class="sc-val" style="color:#185FA5">${gv.d4||0}đ</div></div>
+      <div class="str"><div class="sc-name">Đúng giờ</div><div class="sc-max">10đ</div><div class="sc-val" style="color:#888">${gv.d5||0}đ</div></div>
+      <div class="str total"><div class="sc-name" style="color:var(--red);font-size:13px">Tổng điểm</div><div class="sc-max" style="color:var(--red)">100đ</div><div class="sc-val" style="color:var(--red);font-size:15px">${sc}đ</div></div>
+    </div>`;
+
+  // Tái tục & giới thiệu
+  const renewalColor = (gv.renewal_rate||0) >= 65 ? '#1D9E75' : (gv.renewal_rate||0) >= 50 ? '#BA7517' : '#C8102E';
+  const ratioH = `
+    <div class="ratio-grid">
+      <div class="ratio-item">
+        <div class="ratio-val" style="color:${renewalColor}">${fmtP(gv.renewal_rate||0)}</div>
+        <div class="ratio-label">HV tái tục sau khi học với GV này</div>
+        <div class="ratio-sub">/${gv.total_hv_done||0} HV đã hoàn thành</div>
+        <div class="ratio-vs" style="${(gv.renewal_rate||0)>=60?'background:#E1F5EE;color:#085041':'background:#fff0f0;color:#C8102E'}">
+          ${(gv.renewal_rate||0)>=60?'▲ Trên TB':'▼ Dưới TB'} trường (60%)
+        </div>
+      </div>
+      <div class="ratio-item">
+        <div class="ratio-val" style="color:#534AB7">${gv.referral_count||0}</div>
+        <div class="ratio-label">HV do GV giới thiệu thêm</div>
+        <div class="ratio-sub">Tháng này: ${gv.referral_this_month||0} HV mới</div>
+        <div class="ratio-vs" style="background:#EEEDFE;color:#3C3489">
+          CLV contribution: ${fmtM((gv.referral_count||0)*4000000)}
+        </div>
+      </div>
+    </div>`;
+
+  // Lớp đang dạy
+  const classH = (gv.classes_active||[]).length > 0
+    ? gv.classes_active.map(c => {
+        const attC = (c.att||0)>=85?'#1D9E75':(c.att||0)>=70?'#BA7517':'#C8102E';
+        return `<div class="cl">
+          <div class="cl-bdg">${c.cap_do||'N'}</div>
+          <div class="cl-info">
+            <div class="cl-name">${c.ten_lop||'—'}</div>
+            <div class="cl-sub">${c.lich||''} · ${c.so_hv||0} HV · Buổi ${c.buoi_hien||0}/${c.buoi_tong||0}</div>
+          </div>
+          <div class="cl-att" style="color:${attC}">${fmtP(c.att||0)}</div>
+        </div>`;
+      }).join('')
+    : '<div style="padding:0 16px 12px;font-size:12px;color:#aaa">Chưa có lớp đang dạy</div>';
+
+  // Lương theo role
+  const salaryH = !canSeeSalary(role)
+    ? '' // GV không thuộc scope — không có trường hợp này vì GV tự xem lương mình
+    : `<div class="sec">
+        <div class="sech"><div class="sect">LƯƠNG THÁNG NÀY</div>${canSeeHeSo(role)?'<div class="seca">Chi tiết</div>':''}</div>
+        <div class="salary-box">
+          <div class="sal-header">
+            <div>
+              <div class="sal-title">Thực nhận tháng ${new Date().getMonth()+1}/${new Date().getFullYear()}</div>
+              ${canSeeHeSo(role)?`<div style="font-size:10px;color:rgba(255,255,255,.4);margin-top:2px">Hệ số: ${gv.he_so_luong||'—'} · ${gv.so_buoi_day||0} buổi × ${fmtM(gv.don_gia_buoi||0)}/buổi</div>`:''}
+            </div>
+            <div class="sal-amount">${fmtM(gv.luong_thuc_nhan||0)}</div>
+          </div>
+          <div class="sal-body">
+            <div class="sal-item"><div class="sal-label">Lương cơ bản</div><div class="sal-val">${fmtM(gv.luong_co_ban||0)}</div></div>
+            <div class="sal-item"><div class="sal-label">Thưởng KPI</div><div class="sal-val green">${gv.thuong_kpi>0?'+':''} ${fmtM(gv.thuong_kpi||0)}</div></div>
+            <div class="sal-item"><div class="sal-label">Khấu trừ</div><div class="sal-val red">${gv.khau_tru>0?'-':''} ${fmtM(gv.khau_tru||0)}</div></div>
+            <div class="sal-item"><div class="sal-label">Số buổi dạy</div><div class="sal-val gold">${gv.so_buoi_day||0} buổi</div></div>
+          </div>
+        </div>
+      </div>`;
+
+  // KPI history bars
+  const hist = gv.kpi_history || [
+    {month:'T10',score:68},{month:'T11',score:74},{month:'T12',score:71},
+    {month:'T1',score:78},{month:'T2',score:80},{month:'T3',score:sc}
+  ];
+  const maxScore = Math.max(...hist.map(h=>h.score), 100);
+  const histH = hist.map(h => {
+    const h2 = Math.round(h.score/maxScore*60);
+    const c = h.score>=90?'#D4AF37':h.score>=75?'#1D9E75':h.score>=60?'#534AB7':h.score>=40?'#BA7517':'#C8102E';
+    return `<div class="khb">
+      <div class="khb-val" style="color:${c}">${h.score}</div>
+      <div class="khb-bar" style="height:${h2}px;background:${c};opacity:.85"></div>
+      <div class="khb-month">${h.month}</div>
+    </div>`;
+  }).join('');
+
+  // Lịch sử events
+  const histEvents = gv.history_events || [
+    {type:'award',icon:'🏆',txt:'Được vinh danh Sensei Elite tháng 1/2026',sub:'28/01/26',tag:'Khen thưởng',tagStyle:'background:#FAEEDA;color:#633806'},
+    {type:'class',icon:'📚',txt:'Hoàn thành lớp N3 K340 — 78% đỗ JLPT N3',sub:'15/01/26 · 20 HV',tag:'Kết quả tốt',tagStyle:'background:#E1F5EE;color:#085041'},
+    {type:'class',icon:'📚',txt:'Hoàn thành lớp N3 K335 — 65% đỗ JLPT N3',sub:'30/12/25 · 18 HV',tag:'Đạt mục tiêu',tagStyle:'background:#E6F1FB;color:#0C447C'},
+    {type:'warn',icon:'⚠️',txt:'Cảnh báo: vắng buổi dạy không báo trước',sub:'10/11/25',tag:'Cảnh báo',tagStyle:'background:#fff0f0;color:#C8102E'},
+    {type:'leave',icon:'📅',txt:'Nghỉ phép 3 ngày — đã bàn giao lớp',sub:'05/11/25',tag:'Nghỉ phép',tagStyle:'background:#f7f7f7;color:#666'},
+  ];
+  const histEventsH = histEvents.map(e=>`
+    <div class="hm-item">
+      <div class="hm-icon" style="background:#f5f5f5">${e.icon}</div>
+      <div class="hm-body"><div class="hm-txt">${e.txt}</div><div class="hm-sub">${e.sub}</div></div>
+      <div class="hm-tag" style="${e.tagStyle}">${e.tag}</div>
+    </div>`).join('');
+
+  // AI insights
+  const aiH = insights.map(x=>`
+    <div class="aii">
+      <div class="aibu">${x.icon}</div>
+      <div class="aic">
+        <div class="ailb">${x.lb}</div>
+        <div class="aitxt">${x.txt}</div>
+        <div class="aitag ${x.pr}">${x.tag}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('root').innerHTML = `
+
+  <div class="hero">
+    <div class="hrow">
+      <div class="av"><div class="av-r"></div>${ini(gv.ho_ten)}</div>
+      <div style="flex:1">
+        <div class="hname">${gv.ho_ten||'Giáo viên'}</div>
+        <div class="hsub">GV ${gv.chuyen_mon||''} · ${gv.so_lop_active||0} lớp · ${gv.nam_kinh_nghiem||0} năm KN</div>
+        <div class="bdgs">
+          <div class="bdg ${rank.cls}">${rank.label}</div>
+          ${gv.chuyen_mon?`<div class="bdg b-cap">Chuyên ${gv.chuyen_mon}</div>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="score-block">
+      <div class="sb-main">
+        <div>
+          <div class="sb-score" style="color:${scColor}">${sc}</div>
+          <div class="sb-label">Điểm tháng ${new Date().getMonth()+1}</div>
+          <div class="sb-rank" style="color:${scColor}">${rank.label}</div>
+        </div>
+      </div>
+      <div class="sb-right">
+        <div class="sb-mini"><div class="sm-v" style="color:#5DCAA5">${fmtP(gv.att_rate||0)}</div><div class="sm-l">HV chuyên cần</div></div>
+        <div class="sb-mini"><div class="sm-v" style="color:#D4AF37">${fmtP(gv.jlpt_rate||0)}</div><div class="sm-l">Tỷ lệ đỗ JLPT</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi3">
+    <div class="ki"><div class="kv" style="color:#5DCAA5">${(gv.nps_avg||0).toFixed(1)}</div><div class="kl">NPS / 5</div></div>
+    <div class="ki"><div class="kv" style="color:#D4AF37">${gv.so_buoi_day||0}</div><div class="kl">Buổi dạy T${new Date().getMonth()+1}</div></div>
+    <div class="ki"><div class="kv" style="color:#5DCAA5">${gv.so_lop_active||0}</div><div class="kl">Lớp đang dạy</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('kpi',this)">KPI</button>
+    <button class="tab" onclick="switchTab('lop',this)">Lớp dạy</button>
+    <button class="tab" onclick="switchTab('lichsu',this)">Lịch sử</button>
+  </div>
+
+  <!-- TAB KPI -->
+  <div id="p-kpi" class="panel active">
+    <div class="sec">
+      <div class="sech"><div class="sect">5 TIÊU CHÍ CHẤM ĐIỂM</div></div>
+      <div class="bars">${barsH}</div>
+    </div>
+    ${scoreH}
+    <div class="sec">
+      <div class="sech"><div class="sect">TÁI TỤC & GIỚI THIỆU</div></div>
+      ${ratioH}
+    </div>
+    ${salaryH}
+    <div class="sec">
+      <div class="sech"><div class="sect">AI GỢI Ý — PHÁT TRIỂN GV</div></div>
+      <div class="aibox">
+        <div class="aih"><div class="aiico">🤖</div><div><div class="aitl">Phân tích thông minh</div><div class="aits">Dựa trên data thực tế tháng này</div></div></div>
+        <div class="aibody">${aiH}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB LỚP DẠY -->
+  <div id="p-lop" class="panel">
+    <div class="sec">
+      <div class="sech"><div class="sect">LỚP ĐANG DẠY (${gv.so_lop_active||0} lớp)</div></div>
+      <div class="class-list">${classH}</div>
+    </div>
+    <div class="sec">
+      <div class="sech"><div class="sect">TÁI TỤC & GIỚI THIỆU</div></div>
+      ${ratioH}
+    </div>
+  </div>
+
+  <!-- TAB LỊCH SỬ -->
+  <div id="p-lichsu" class="panel">
+    <div class="sec">
+      <div class="sech"><div class="sect">ĐIỂM KPI 6 THÁNG GẦN NHẤT</div></div>
+      <div class="kpi-history">
+        <div class="kh-head">
+          <div class="kh-title">Xu hướng điểm GV</div>
+          <div class="kh-avg">TB: ${Math.round(hist.reduce((s,h)=>s+h.score,0)/hist.length)}đ</div>
+        </div>
+        <div class="kh-bars">${histH}</div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sech"><div class="sect">SỰ KIỆN & LỊCH SỬ</div></div>
+      <div class="hist-month">
+        <div class="hm-items">${histEventsH}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btnr" onclick="alert('Xem lịch dạy: ${gv.teacher_id}')">Lịch dạy</button>
+    <button class="btn btno" onclick="alert('Ghi nhận GV: ${gv.teacher_id}')">Ghi nhận</button>
+    <button class="btn btng" onclick="alert('Xem HV của GV: ${gv.teacher_id}')">Xem HV</button>
+  </div>
+  <div class="footer"><div class="fc"><div class="fi"></div></div><div class="ft"><span>Sensei Nihongo</span> · CRM · Giáo viên</div></div>
+  `;
+}
+
+// ─────────────────────────────────────────
+// TABS
+// ─────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('p-'+id)?.classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─────────────────────────────────────────
+// DEMO DATA
+// ─────────────────────────────────────────
+function demoData(id) {
+  return {
+    teacher_id: id||'GV-042', ho_ten:'Nguyễn Thị Ngọc Hạnh',
+    chuyen_mon:'N3/N2', nam_kinh_nghiem:3,
+    so_lop_active:5, so_buoi_day:47,
+    total_score:82, d1:23, d2:17, d3:20, d4:18, d5:9,
+    att_rate:91, bt_rate:84, jlpt_rate:78, nps_avg:4.6, ontime_rate:88,
+    renewal_rate:68, total_hv_done:45, referral_count:8, referral_this_month:2,
+    he_so_luong:1.2, don_gia_buoi:120000, so_buoi_day:47,
+    luong_co_ban:5640000, thuong_kpi:500000, khau_tru:200000, luong_thuc_nhan:5940000,
+    kpi_history:[
+      {month:'T10',score:68},{month:'T11',score:74},{month:'T12',score:71},
+      {month:'T1',score:78},{month:'T2',score:80},{month:'T3',score:82}
+    ],
+    classes_active:[
+      {cap_do:'N3',ten_lop:'N3 K352',lich:'T3-T5 19:00',so_hv:18,buoi_hien:18,buoi_tong:32,att:91},
+      {cap_do:'N3',ten_lop:'N3 K348',lich:'T2-T4 20:00',so_hv:15,buoi_hien:22,buoi_tong:32,att:76},
+      {cap_do:'N2',ten_lop:'N2 K201',lich:'T6-CN 09:00',so_hv:12,buoi_hien:10,buoi_tong:40,att:95},
+    ],
+    history_events:[
+      {icon:'🏆',txt:'Vinh danh Sensei Elite tháng 1/2026',sub:'28/01/26',tag:'Khen thưởng',tagStyle:'background:#FAEEDA;color:#633806'},
+      {icon:'📚',txt:'Hoàn thành N3 K340 — 78% đỗ JLPT',sub:'15/01/26 · 20 HV',tag:'Kết quả tốt',tagStyle:'background:#E1F5EE;color:#085041'},
+      {icon:'📚',txt:'Hoàn thành N3 K335 — 65% đỗ JLPT',sub:'30/12/25 · 18 HV',tag:'Đạt mục tiêu',tagStyle:'background:#E6F1FB;color:#0C447C'},
+      {icon:'⚠️',txt:'Cảnh báo: vắng dạy không báo trước',sub:'10/11/25',tag:'Cảnh báo',tagStyle:'background:#fff0f0;color:#C8102E'},
+      {icon:'📅',txt:'Nghỉ phép 3 ngày — đã bàn giao lớp',sub:'05/11/25',tag:'Nghỉ phép',tagStyle:'background:#f7f7f7;color:#666'},
+    ]
+  };
+}
+
+// ─────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────
+async function init() {
+  const p = new URLSearchParams(location.search);
+  const id = p.get('id') || p.get('teacher_id');
+  try {
+    let gv;
+    if (!id || SCRIPT_URL.includes('YOUR_SCRIPT')) {
+      await new Promise(r=>setTimeout(r,700));
+      gv = demoData(id);
+    } else {
+      const res = await fetch(`${SCRIPT_URL}?action=getTeacher&id=${encodeURIComponent(id)}&role=${getRole()}`);
+      gv = await res.json();
+      if (gv.error) throw new Error(gv.error);
+    }
+    render(gv);
+  } catch(e) {
+    document.getElementById('root').innerHTML = `<div class="errbox"><h3>Không tải được dữ liệu</h3><p>ID: ${id||'?'}<br>Lỗi: ${e.message}</p></div>`;
+  } finally {
+    document.getElementById('loading').style.opacity='0';
+    setTimeout(()=>{
+      document.getElementById('loading').style.display='none';
+      document.getElementById('app').classList.add('ready');
+    },400);
+  }
+}
+init();
+</script>
+</body>
+</html>
