@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Sensei CRM — Hồ sơ học viên</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+
+  :root {
+    --red: #C8102E;
+    --red-deep: #9e0b22;
+    --red-light: #fff0f3;
+    --red-subtle: rgba(200,16,46,0.08);
+    --gold: #D4AF37;
+    --gold-light: rgba(212,175,55,0.15);
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --amber: #BA7517;
+    --dark: #0f0505;
+    --dark2: #1a0808;
+    --dark3: #230c0c;
+    --gray-bg: #f7f7f7;
+    --gray-line: #efefef;
+    --text: #1a1a1a;
+    --text-2: #666;
+    --text-3: #aaa;
+    --font: 'Be Vietnam Pro', sans-serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    min-height: 100vh;
+    background: var(--dark);
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text);
+    overscroll-behavior: none;
+  }
+
+  /* ── LOADING ── */
+  #loading {
+    position: fixed; inset: 0;
+    background: var(--dark);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 999; gap: 16px;
+    transition: opacity 0.4s;
+  }
+  .loader-logo {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: white; display: flex; align-items: center; justify-content: center;
+    animation: pulse-logo 1.5s ease-in-out infinite;
+  }
+  .loader-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--red); }
+  .loader-txt { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.05em; }
+  @keyframes pulse-logo { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+
+  /* ── APP WRAPPER ── */
+  #app {
+    max-width: 430px; margin: 0 auto;
+    min-height: 100vh;
+    background: #fff;
+    display: flex; flex-direction: column;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  #app.ready { opacity: 1; }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    background: var(--red);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .back-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: white; cursor: pointer;
+    flex-shrink: 0; border: none;
+    transition: background 0.2s;
+  }
+  .back-btn:active { background: rgba(255,255,255,0.3); }
+  .brand { display: flex; align-items: center; gap: 8px; flex: 1; }
+  .brand-circle {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .brand-circle-in { width: 15px; height: 15px; border-radius: 50%; background: var(--red); }
+  .brand-name { font-size: 13px; font-weight: 600; color: white; letter-spacing: 0.01em; }
+  .hv-id { font-size: 11px; color: rgba(255,255,255,0.6); margin-left: auto; }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 16px;
+    background: linear-gradient(180deg, var(--dark2) 0%, var(--dark3) 100%);
+  }
+  .hero-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .avatar {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: var(--red); display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 700; color: white; flex-shrink: 0;
+    border: 2.5px solid rgba(200,16,46,0.5);
+    position: relative;
+  }
+  .avatar-ring {
+    position: absolute; inset: -4px; border-radius: 50%;
+    border: 1px solid rgba(200,16,46,0.25);
+  }
+  .hero-name { font-size: 17px; font-weight: 700; color: white; }
+  .hero-sub { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 3px; line-height: 1.5; }
+  .hero-badges { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+  .badge {
+    font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 99px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .badge-warn { background: rgba(200,16,46,0.22); color: #ff8a8a; border: 0.5px solid rgba(200,16,46,0.4); }
+  .badge-ok { background: rgba(29,158,117,0.2); color: #5DCAA5; border: 0.5px solid rgba(29,158,117,0.4); }
+  .badge-silver { background: rgba(180,180,180,0.12); color: #ccc; border: 0.5px solid rgba(200,200,200,0.3); }
+  .badge-gold { background: rgba(212,175,55,0.18); color: var(--gold); border: 0.5px solid rgba(212,175,55,0.4); }
+  .badge-diamond { background: rgba(127,119,221,0.2); color: #AFA9EC; border: 0.5px solid rgba(127,119,221,0.4); }
+  .badge-bronze { background: rgba(205,127,50,0.2); color: #cd7f32; border: 0.5px solid rgba(205,127,50,0.4); }
+
+  .hero-meta {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  }
+  .mm {
+    background: rgba(255,255,255,0.06); border-radius: 8px;
+    padding: 8px 10px; border: 0.5px solid rgba(255,255,255,0.05);
+  }
+  .mm-label { font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 3px; }
+  .mm-val { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9); }
+  .mm-val.gold { color: var(--gold); }
+  .mm-val.green { color: #5DCAA5; }
+  .mm-val.red { color: #ff8a8a; }
+
+  /* ── KPI ROW ── */
+  .kpi-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    background: #0f0505;
+    border-bottom: 1px solid rgba(200,16,46,0.12);
+  }
+  .ki {
+    padding: 12px 6px; text-align: center;
+    border-right: 0.5px solid rgba(255,255,255,0.04);
+  }
+  .ki:last-child { border-right: none; }
+  .kv { font-size: 20px; font-weight: 700; }
+  .kl { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+
+  /* ── ALERT BAR ── */
+  .alert-bar {
+    margin: 10px 14px;
+    padding: 9px 13px;
+    background: var(--red-subtle);
+    border-radius: var(--radius-sm);
+    border: 0.5px solid rgba(200,16,46,0.25);
+    display: flex; gap: 9px; align-items: flex-start;
+  }
+  .alert-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--red); flex-shrink: 0; margin-top: 3px;
+    animation: blink 1.8s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .alert-text { font-size: 12px; color: var(--red); line-height: 1.5; font-weight: 500; }
+
+  /* ── TABS ── */
+  .tab-wrap {
+    display: flex; gap: 5px;
+    padding: 10px 14px;
+    background: var(--gray-bg);
+    border-bottom: 1px solid var(--gray-line);
+    position: sticky; top: 50px; z-index: 9;
+  }
+  .tab-btn {
+    flex: 1; padding: 7px 4px;
+    border-radius: 7px; font-size: 11px; font-weight: 600;
+    text-align: center; cursor: pointer; border: none;
+    color: var(--text-3); background: transparent;
+    font-family: var(--font);
+    transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--red); color: white; }
+
+  /* ── SECTIONS ── */
+  .section { border-top: 1px solid var(--gray-line); }
+  .sec-head {
+    padding: 12px 16px 6px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .sec-title { font-size: 10px; font-weight: 700; color: var(--text-3); letter-spacing: 0.07em; }
+  .sec-action { font-size: 12px; color: var(--red); cursor: pointer; font-weight: 600; }
+
+  /* ── BARS ── */
+  .bars { padding: 4px 16px 12px; display: flex; flex-direction: column; gap: 9px; }
+  .bar-row { display: flex; align-items: center; gap: 9px; }
+  .bar-label { font-size: 12px; color: var(--text-2); min-width: 100px; }
+  .bar-track {
+    flex: 1; height: 5px; background: #f0f0f0;
+    border-radius: 99px; overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 99px;
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+  }
+  .bar-pct { font-size: 12px; font-weight: 600; min-width: 38px; text-align: right; }
+
+  /* ── INFO GRID ── */
+  .info-grid { padding: 4px 16px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .info-item {
+    background: var(--gray-bg); border: 0.5px solid var(--gray-line);
+    border-radius: var(--radius-sm); padding: 9px 11px;
+  }
+  .info-label { font-size: 10px; color: var(--text-3); margin-bottom: 3px; }
+  .info-val { font-size: 12px; font-weight: 600; color: var(--text); }
+  .info-val.red { color: var(--red); }
+  .info-val.gold { color: #9a7a00; }
+  .info-val.green { color: var(--green); }
+  .info-val.amber { color: var(--amber); }
+
+  /* ── CARE LIST ── */
+  .care-list { padding: 4px 16px 12px; }
+  .care-item {
+    display: flex; gap: 9px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 0.5px solid var(--gray-line);
+  }
+  .care-item:last-child { border-bottom: none; }
+  .care-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .care-body { flex: 1; }
+  .care-note { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .care-meta { font-size: 10px; color: var(--text-3); margin-top: 3px; }
+  .care-tag {
+    font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 99px;
+    flex-shrink: 0; white-space: nowrap; margin-top: 2px;
+  }
+
+  /* ── SALE CARD ── */
+  .sale-card {
+    margin: 4px 16px 14px;
+    background: var(--gray-bg); border: 0.5px solid var(--gray-line);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .sale-header {
+    padding: 11px 13px; background: var(--red-light);
+    border-bottom: 0.5px solid rgba(200,16,46,0.1);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sale-av {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--red);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: white; flex-shrink: 0;
+  }
+  .sale-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .sale-role { font-size: 10px; color: var(--red); margin-top: 2px; font-weight: 500; }
+  .sale-kpi { margin-left: auto; text-align: right; }
+  .sale-kpi-v { font-size: 13px; font-weight: 700; color: var(--text); }
+  .sale-kpi-l { font-size: 10px; color: var(--text-3); }
+  .sale-stats {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    padding: 11px 13px; gap: 6px;
+  }
+  .sale-stat { text-align: center; }
+  .sale-stat-v { font-size: 14px; font-weight: 700; color: var(--text); }
+  .sale-stat-l { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+  /* ── TIMELINE ── */
+  .timeline { padding: 0 13px 11px; display: flex; align-items: center; }
+  .tl-it { flex: 1; text-align: center; }
+  .tl-d { width: 9px; height: 9px; border-radius: 50%; margin: 0 auto 4px; transition: transform 0.2s; }
+  .tl-d.done { background: var(--red); }
+  .tl-d.now { background: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.2); }
+  .tl-d.todo { background: #ddd; }
+  .tl-ln { flex: 1; height: 1.5px; background: #e8e8e8; align-self: center; position: relative; top: -6px; }
+  .tl-ln.done { background: var(--red); }
+  .tl-lbl { font-size: 9px; color: var(--text-3); line-height: 1.4; }
+  .tl-lbl.done { color: var(--red); font-weight: 600; }
+  .tl-lbl.now { color: #9a7a00; font-weight: 600; }
+
+  /* ── RANK TABLE ── */
+  .rank-table {
+    margin: 4px 16px 8px;
+    border: 0.5px solid var(--gray-line); border-radius: var(--radius); overflow: hidden;
+  }
+  .rt-row {
+    display: grid; grid-template-columns: 26px 1fr 65px 1fr;
+    align-items: center; padding: 9px 12px;
+    border-bottom: 0.5px solid var(--gray-line); font-size: 12px;
+    transition: background 0.15s;
+  }
+  .rt-row:last-child { border-bottom: none; }
+  .rt-row.hdr { background: var(--gray-bg); font-size: 10px; color: var(--text-3); font-weight: 700; }
+  .rt-row.current { background: var(--red-light); border-left: 3px solid var(--red); }
+  .rt-icon { font-size: 14px; text-align: center; }
+  .rt-name { font-weight: 600; color: var(--text); line-height: 1.4; }
+  .rt-name small { display: block; font-size: 10px; color: var(--text-3); font-weight: 400; }
+  .rt-row.current .rt-name { color: var(--red); }
+  .rt-money { font-size: 11px; color: var(--text-2); }
+  .rt-perks { display: flex; gap: 3px; flex-wrap: wrap; }
+  .pk {
+    font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 99px;
+    background: #f0f0f0; color: var(--text-2);
+  }
+  .rt-row.current .pk { background: rgba(200,16,46,0.1); color: var(--red); }
+
+  /* ── UPSELL BOX ── */
+  .upsell-box {
+    margin: 0 16px 14px; padding: 12px 14px;
+    background: var(--red-light); border: 0.5px solid rgba(200,16,46,0.2);
+    border-radius: var(--radius-sm);
+  }
+  .upsell-title { font-size: 12px; font-weight: 700; color: var(--red); margin-bottom: 6px; }
+  .upsell-txt { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+  .upsell-txt strong { color: var(--red); font-weight: 700; }
+
+  /* ── STRIP COMPONENTS ── */
+  .strip {
+    margin: 4px 14px 8px;
+    border-radius: var(--radius-sm); overflow: hidden;
+    border: 0.5px solid var(--gray-line); cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .strip:active { border-color: rgba(200,16,46,0.4); }
+  .strip-inner {
+    padding: 10px 13px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .strip-sale { background: var(--red-light); }
+  .strip-rank { background: linear-gradient(135deg, var(--dark2), var(--dark3)); }
+
+  /* ── DETAIL TOGGLE BUTTON ── */
+  .detail-toggle {
+    margin: 6px 14px 10px;
+    padding: 11px 14px;
+    background: var(--red-light); border: 0.5px solid rgba(200,16,46,0.22);
+    border-radius: var(--radius-sm); cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.2s;
+  }
+  .detail-toggle:hover { background: #ffe5e9; }
+  .detail-toggle-txt { font-size: 13px; font-weight: 600; color: var(--red); }
+  .detail-toggle-arrow {
+    font-size: 18px; color: var(--red);
+    transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  }
+  .detail-toggle-arrow.open { transform: rotate(90deg); }
+
+  /* ── DRAWER ── */
+  .drawer {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(.4,0,.2,1);
+    background: var(--gray-bg);
+    border-top: 0 solid var(--gray-line);
+  }
+  .drawer.open {
+    max-height: 1800px;
+    border-top: 1px solid var(--gray-line);
+  }
+  .drawer-inner { padding: 4px 0 8px; }
+
+  /* ── ACTIONS ── */
+  .actions { padding: 12px 14px 14px; display: flex; gap: 8px; }
+  .btn {
+    flex: 1; padding: 11px 6px;
+    border-radius: var(--radius-sm); font-size: 13px; font-weight: 700;
+    text-align: center; cursor: pointer; border: none; font-family: var(--font);
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:active { opacity: 0.85; transform: scale(0.98); }
+  .btn-red { background: var(--red); color: white; }
+  .btn-outline { background: white; color: var(--red); border: 1.5px solid var(--red); }
+  .btn-gray { background: var(--gray-bg); color: var(--text-2); border: 0.5px solid var(--gray-line); }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 10px 16px; background: var(--gray-bg);
+    border-top: 1px solid var(--gray-line);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .footer-circle {
+    width: 18px; height: 18px; border-radius: 50%; background: var(--red);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .footer-in { width: 10px; height: 10px; border-radius: 50%; background: white; }
+  .footer-txt { font-size: 11px; color: var(--text-3); }
+  .footer-txt span { color: var(--red); font-weight: 600; }
+
+  /* ── ERROR ── */
+  .error-box {
+    margin: 40px 20px; padding: 20px;
+    background: var(--red-light); border: 1px solid rgba(200,16,46,0.3);
+    border-radius: var(--radius); text-align: center;
+  }
+  .error-box h3 { color: var(--red); margin-bottom: 8px; }
+  .error-box p { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+
+  /* ── PANEL VISIBILITY ── */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── SKELETON ── */
+  .skel {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skel 1.4s infinite;
+    border-radius: 4px;
+  }
+  @keyframes skel { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="loader-logo"><div class="loader-dot"></div></div>
+  <div class="loader-txt">SENSEI NIHONGO · CRM</div>
+</div>
+
+<div id="app">
+
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">&#8592;</button>
+    <div class="brand">
+      <div class="brand-circle"><div class="brand-circle-in"></div></div>
+      <div class="brand-name">Sensei Nihongo</div>
+    </div>
+    <div class="hv-id" id="hv-id-top">HV-?????</div>
+  </div>
+
+  <div id="main-content">
+    <!-- Render by JS -->
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIG — Thay SCRIPT_URL bằng Apps Script Web App URL
+// ═══════════════════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPHNBVoQDBO7EDkrdf15sf-1yHom_ujefvleifk2zyezRBuzQ_ZG78Xc63F5RAsPhZ/exec';
+
+// Rule xếp hạng học viên — admin có thể chỉnh tại đây
+const RANK_RULES = [
+  { key: 'diamond', icon: '✦', label: 'Diamond', sub: 'Thượng khách',   min: 20000000, pct: 20, perks: ['GV riêng', 'Lớp VIP', '-20%'] },
+  { key: 'gold',    icon: '◆', label: 'Gold',    sub: 'Học viên vàng',  min: 12000000, pct: 15, perks: ['Ưu tiên lớp', '-15%'] },
+  { key: 'silver',  icon: '◈', label: 'Silver',  sub: 'Học viên thân',  min:  8000000, pct: 10, perks: ['CS ưu tiên', '-10%'] },
+  { key: 'bronze',  icon: '○', label: 'Bronze',  sub: 'Học viên mới',   min:  4000000, pct:  5, perks: ['CS cơ bản'] },
+  { key: 'new',     icon: '·', label: 'New',     sub: 'Mới đăng ký',    min:         0, pct:  0, perks: ['Onboard'] },
+];
+
+function getRank(totalFee) {
+  for (const r of RANK_RULES) { if (totalFee >= r.min) return r; }
+  return RANK_RULES[RANK_RULES.length - 1];
+}
+
+function getNextRank(current) {
+  const idx = RANK_RULES.findIndex(r => r.key === current.key);
+  return idx > 0 ? RANK_RULES[idx - 1] : null;
+}
+
+function fmtMoney(n) {
+  if (!n) return '0đ';
+  return Number(n).toLocaleString('vi-VN') + 'đ';
+}
+
+function fmtPct(n) { return Math.round(n) + '%'; }
+
+function getInitials(name) {
+  if (!name) return 'HV';
+  const parts = name.trim().split(' ');
+  return parts.length >= 2
+    ? (parts[parts.length - 2][0] + parts[parts.length - 1][0]).toUpperCase()
+    : name.slice(0, 2).toUpperCase();
+}
+
+function badgeClass(rank) {
+  const map = { diamond:'badge-diamond', gold:'badge-gold', silver:'badge-silver', bronze:'badge-bronze', new:'' };
+  return map[rank.key] || '';
+}
+
+// ═══════════════════════════════════════════════════════
+// FETCH DATA
+// ═══════════════════════════════════════════════════════
+async function fetchHV(customerId) {
+  const url = `${SCRIPT_URL}?action=getCustomer&id=${encodeURIComponent(customerId)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Network error');
+  const data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+function render(hv) {
+  const rank = getRank(hv.tong_hoc_phi || 0);
+  const nextRank = getNextRank(rank);
+  const needMore = nextRank ? nextRank.min - (hv.tong_hoc_phi || 0) : 0;
+  const initials = getInitials(hv.ho_ten);
+
+  // KPI colors
+  const attColor = (hv.chuyen_can || 0) >= 80 ? '#5DCAA5' : (hv.chuyen_can || 0) >= 65 ? '#D4AF37' : '#ff8a8a';
+  const scoreColor = (hv.diem_tb || 0) >= 7 ? '#5DCAA5' : (hv.diem_tb || 0) >= 6 ? '#D4AF37' : '#ff8a8a';
+  const dLevelColor = ['D9','D10'].includes(hv.d_level) ? '#5DCAA5' : hv.d_level === 'D7' || hv.d_level === 'D8' ? '#D4AF37' : '#aaa';
+
+  document.getElementById('hv-id-top').textContent = hv.customer_id || 'HV-?????';
+
+  const alertHtml = hv.care_alert ? `
+    <div class="alert-bar">
+      <div class="alert-dot"></div>
+      <div class="alert-text">${hv.care_alert}</div>
+    </div>` : '';
+
+  // Care logs
+  const careHtml = (hv.care_logs || []).length > 0
+    ? hv.care_logs.map(c => {
+        const dotColor = c.phan_ung === 'Tích cực' ? '#1D9E75' : c.phan_ung === 'Chưa xử lý' ? '#C8102E' : '#BA7517';
+        const tagStyle = c.phan_ung === 'Tích cực'
+          ? 'background:#E1F5EE;color:#085041'
+          : c.phan_ung === 'Chưa xử lý'
+          ? 'background:#fff0f0;color:#C8102E'
+          : 'background:#FAEEDA;color:#633806';
+        return `<div class="care-item">
+          <div class="care-dot" style="background:${dotColor}"></div>
+          <div class="care-body">
+            <div class="care-note">${c.van_de || '—'}</div>
+            <div class="care-meta">${c.ngay_cham || ''} · ${c.hinh_thuc || ''} · CS: ${c.nguoi_cham || ''}</div>
+          </div>
+          <div class="care-tag" style="${tagStyle}">${c.phan_ung || '—'}</div>
+        </div>`;
+      }).join('')
+    : '<div style="padding:0 16px 12px;font-size:12px;color:#aaa">Chưa có lịch sử chăm sóc</div>';
+
+  // Rank table
+  const rankTableHtml = RANK_RULES.map(r => {
+    const isCur = r.key === rank.key;
+    return `<div class="rt-row${isCur ? ' current' : ''}">
+      <div class="rt-icon">${r.icon}</div>
+      <div class="rt-name${isCur ? ' ' : ''}">${r.label}${isCur ? ' ← đây' : ''}<small>${r.sub}${isCur && nextRank ? ' · cần ' + fmtMoney(needMore) + ' → ' + nextRank.label : ''}</small></div>
+      <div class="rt-money" style="${r.key==='diamond'?'color:#AFA9EC':r.key==='gold'?'color:#D4AF37':r.key==='bronze'?'color:#cd7f32':'color:#aaa'}">≥ ${fmtMoney(r.min)}</div>
+      <div class="rt-perks">${r.perks.map(p=>`<div class="pk">${p}</div>`).join('')}</div>
+    </div>`;
+  }).join('');
+
+  // Timeline D-level
+  const dLevels = ['D3','D4','D5','D6','D7','D8','D9','D10'];
+  const curIdx = dLevels.indexOf(hv.d_level);
+  const tlHtml = dLevels.map((d, i) => {
+    const cls = i < curIdx ? 'done' : i === curIdx ? 'now' : 'todo';
+    const lblCls = i < curIdx ? 'done' : i === curIdx ? 'now' : '';
+    return `
+      <div class="tl-it">
+        <div class="tl-d ${cls}"></div>
+        <div class="tl-lbl ${lblCls}">${d}</div>
+      </div>
+      ${i < dLevels.length - 1 ? `<div class="tl-ln ${i < curIdx ? 'done' : ''}"></div>` : ''}`;
+  }).join('');
+
+  document.getElementById('main-content').innerHTML = `
+
+    <div class="hero">
+      <div class="hero-row">
+        <div class="avatar">
+          <div class="avatar-ring"></div>
+          ${initials}
+        </div>
+        <div style="flex:1">
+          <div class="hero-name">${hv.ho_ten || 'Học viên'}</div>
+          <div class="hero-sub">
+            ${hv.ten_lop || ''} · GV: ${hv.ten_gv || '—'} · Buổi ${hv.buoi_da_hoc || 0}/${hv.tong_buoi || 0}
+          </div>
+          <div class="hero-badges">
+            <div class="badge ${hv.tinh_trang_hoc === 'Tốt' || (hv.chuyen_can || 0) >= 80 ? 'badge-ok' : 'badge-warn'}">
+              ${hv.tinh_trang_hoc || 'Đang theo dõi'} · ${hv.rank_score || '—'}đ
+            </div>
+            <div class="badge ${badgeClass(rank)}">${rank.label}</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <div class="mm">
+          <div class="mm-label">Sale phụ trách</div>
+          <div class="mm-val">${hv.sale_phu_trach || '—'}</div>
+        </div>
+        <div class="mm">
+          <div class="mm-label">Tổng học phí</div>
+          <div class="mm-val gold">${fmtMoney(hv.tong_hoc_phi)}</div>
+        </div>
+        <div class="mm">
+          <div class="mm-label">Nguồn lead</div>
+          <div class="mm-val">${hv.nguon_lead || '—'}</div>
+        </div>
+        <div class="mm">
+          <div class="mm-label">Số khóa học</div>
+          <div class="mm-val green">${hv.tong_khoa_hoc || 0} khóa</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="ki">
+        <div class="kv" style="color:${attColor}">${fmtPct(hv.chuyen_can || 0)}</div>
+        <div class="kl">Chuyên cần</div>
+      </div>
+      <div class="ki">
+        <div class="kv" style="color:${scoreColor}">${(hv.diem_tb || 0).toFixed(1)}</div>
+        <div class="kl">Điểm TB</div>
+      </div>
+      <div class="ki">
+        <div class="kv" style="color:${dLevelColor}">${hv.d_level || '—'}</div>
+        <div class="kl">D-Level</div>
+      </div>
+    </div>
+
+    ${alertHtml}
+
+    <div class="tab-wrap">
+      <button class="tab-btn active" onclick="switchTab('tiendo',this)">Tiến độ</button>
+      <button class="tab-btn" onclick="switchTab('dauvaosale',this)">Đầu vào & Sale</button>
+      <button class="tab-btn" onclick="switchTab('chamsoc',this)">Chăm sóc</button>
+    </div>
+
+    <!-- TAB: TIẾN ĐỘ -->
+    <div id="tab-tiendo" class="tab-panel active">
+      <div class="section">
+        <div class="sec-head"><div class="sec-title">TIẾN ĐỘ HỌC TẬP</div></div>
+        <div class="bars">
+          <div class="bar-row">
+            <div class="bar-label">Chuyên cần</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${hv.chuyen_can||0}%;background:${attColor}"></div></div>
+            <div class="bar-pct" style="color:${attColor}">${fmtPct(hv.chuyen_can||0)}</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Hoàn thành BT</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${hv.hoan_thanh_bt||0}%;background:#BA7517"></div></div>
+            <div class="bar-pct" style="color:#BA7517">${fmtPct(hv.hoan_thanh_bt||0)}</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Điểm bài tập</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(hv.diem_tb||0)*10}%;background:${scoreColor}"></div></div>
+            <div class="bar-pct" style="color:${scoreColor}">${(hv.diem_tb||0).toFixed(1)}</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label">Feedback GV</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${(hv.nps_gv||0)*20}%;background:#1D9E75"></div></div>
+            <div class="bar-pct" style="color:#1D9E75">${(hv.nps_gv||0).toFixed(1)}/5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head"><div class="sec-title">HẠNG HỌC VIÊN & XẾP LOẠI</div></div>
+        <div class="rank-table">
+          <div class="rt-row hdr">
+            <div></div><div>Hạng</div><div>Học phí</div><div>Quyền lợi</div>
+          </div>
+          ${rankTableHtml}
+        </div>
+        ${nextRank ? `
+        <div class="upsell-box">
+          <div class="upsell-title">Gợi ý — nâng lên ${nextRank.label}</div>
+          <div class="upsell-txt">
+            Cần thêm <strong>${fmtMoney(needMore)}</strong> để đạt hạng <strong>${nextRank.label}</strong>
+            → được giảm <strong>${nextRank.pct}%</strong> học phí${nextRank.perks.length > 1 ? ' và ' + nextRank.perks.slice(1).join(', ') : ''}.
+            Sale ${hv.sale_phu_trach || ''} upsell D10 ngay khi khóa hiện tại kết thúc.
+          </div>
+        </div>` : `
+        <div class="upsell-box">
+          <div class="upsell-title">Diamond — Thượng khách ✦</div>
+          <div class="upsell-txt">Học viên đã đạt hạng cao nhất. Duy trì chất lượng và ưu tiên mọi quyền lợi tốt nhất.</div>
+        </div>`}
+      </div>
+    </div>
+
+    <!-- TAB: ĐẦU VÀO & SALE -->
+    <div id="tab-dauvaosale" class="tab-panel">
+      <div class="section">
+        <div class="sec-head"><div class="sec-title">THÔNG TIN ĐẦU VÀO (từ D7)</div></div>
+        <div class="info-grid">
+          <div class="info-item"><div class="info-label">Năng lực đầu vào</div><div class="info-val">${hv.nang_luc||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Kỹ năng yếu</div><div class="info-val red">${hv.ky_nang_yeu||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Xếp loại</div><div class="info-val">${hv.xep_loai||'—'}</div></div>
+          <div class="info-item"><div class="info-label">JLPT đã thi</div><div class="info-val">${hv.jlpt_da_thi||'Chưa thi'}</div></div>
+          <div class="info-item"><div class="info-label">Ngành nghề</div><div class="info-val">${hv.nganh_nghe||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Loại visa</div><div class="info-val">${hv.loai_visa||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Mục tiêu</div><div class="info-val">${hv.muc_tieu||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Nguyện vọng</div><div class="info-val">${hv.nguyen_vong||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Sang Nhật</div><div class="info-val">${hv.sang_nhat||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Tuổi</div><div class="info-val">${hv.tuoi||'—'}</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head"><div class="sec-title">LỊCH SỬ ĐIỂM SỐ</div></div>
+        <div class="info-grid">
+          <div class="info-item"><div class="info-label">Điểm BT Term 1</div><div class="info-val green">${hv.diem_bt_t1||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Điểm BT Term 2</div><div class="info-val ${(hv.diem_bt_t2||0)<6?'red':'green'}">${hv.diem_bt_t2||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Chuyên cần T1</div><div class="info-val green">${fmtPct(hv.cc_t1||0)}</div></div>
+          <div class="info-item"><div class="info-label">Chuyên cần T2</div><div class="info-val ${(hv.cc_t2||0)<70?'red':'green'}">${fmtPct(hv.cc_t2||0)}</div></div>
+          <div class="info-item"><div class="info-label">Đánh giá chung</div><div class="info-val">${hv.danh_gia_chung||'—'}</div></div>
+          <div class="info-item"><div class="info-label">Kết quả thi JLPT</div><div class="info-val">${hv.ket_qua_jlpt||'Chưa thi'}</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-head"><div class="sec-title">SALE PHỤ TRÁCH</div></div>
+        <div class="sale-card">
+          <div class="sale-header">
+            <div class="sale-av">${getInitials(hv.sale_phu_trach||'')}</div>
+            <div>
+              <div class="sale-name">${hv.sale_phu_trach||'—'}</div>
+              <div class="sale-role">Sale · ${hv.nguon_lead||'—'}</div>
+            </div>
+            <div class="sale-kpi">
+              <div class="sale-kpi-v">${hv.d_level_vao||'—'}</div>
+              <div class="sale-kpi-l">D-level lúc vào</div>
+            </div>
+          </div>
+          <div class="sale-stats">
+            <div class="sale-stat">
+              <div class="sale-stat-v">${hv.toc_do_chot||'—'}</div>
+              <div class="sale-stat-l">Tốc độ chốt</div>
+            </div>
+            <div class="sale-stat">
+              <div class="sale-stat-v">${hv.nguon_lead||'—'}</div>
+              <div class="sale-stat-l">Kênh lead</div>
+            </div>
+            <div class="sale-stat">
+              <div class="sale-stat-v" style="color:var(--red)">${hv.ngay_convert||'—'}</div>
+              <div class="sale-stat-l">Ngày convert</div>
+            </div>
+          </div>
+          <div class="timeline">${tlHtml}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CHĂM SÓC -->
+    <div id="tab-chamsoc" class="tab-panel">
+      <div class="section">
+        <div class="sec-head">
+          <div class="sec-title">LỊCH SỬ CHĂM SÓC</div>
+          <div class="sec-action" onclick="alert('Tính năng ghi nhận CS sẽ mở form')">+ Ghi nhận</div>
+        </div>
+        <div class="care-list">${careHtml}</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-red" onclick="handleUpsell('${hv.customer_id}','${hv.sale_phu_trach||''}')">Upsell D10</button>
+      <button class="btn btn-outline" onclick="handleCS('${hv.customer_id}')">Ghi nhận CS</button>
+      <button class="btn btn-gray" onclick="handleClass('${hv.ten_lop||''}')">Xem lớp</button>
+    </div>
+
+    <div class="footer">
+      <div class="footer-circle"><div class="footer-in"></div></div>
+      <div class="footer-txt"><span>Sensei Nihongo</span> · CRM · Học tiếng Nhật hôm nay</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id)?.classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════
+function handleUpsell(id, sale) {
+  alert(`Mở form Upsell D10\nHV: ${id}\nSale: ${sale}\n\n→ Kết nối Glide action hoặc Google Form`);
+}
+function handleCS(id) {
+  alert(`Mở form Ghi nhận chăm sóc\nHV: ${id}\n\n→ Kết nối Glide action hoặc Google Form`);
+}
+function handleClass(tenLop) {
+  alert(`Xem lớp: ${tenLop}\n\n→ Drill-down sang màn hình Lớp học`);
+}
+
+// ═══════════════════════════════════════════════════════
+// DEMO DATA — dùng khi không có API (test local)
+// ═══════════════════════════════════════════════════════
+function getDemoData(id) {
+  return {
+    customer_id: id || 'HV-00145',
+    ho_ten: 'Phạm Minh Hiếu',
+    ten_lop: 'N3 K352',
+    ten_gv: 'Nguyễn Thị Ngọc Hạnh',
+    buoi_da_hoc: 18, tong_buoi: 32,
+    d_level: 'D8', d_level_vao: 'D4',
+    tinh_trang_hoc: 'Cần chú ý', rank_score: 52,
+    chuyen_can: 62, diem_tb: 5.2, hoan_thanh_bt: 55, nps_gv: 3.8,
+    tong_hoc_phi: 8400000, tong_khoa_hoc: 2,
+    sale_phu_trach: 'Nguyễn Thị Lan',
+    nguon_lead: 'Facebook Ads',
+    toc_do_chot: '5 ngày',
+    ngay_convert: '15/01/26',
+    care_alert: 'Vắng 3 buổi liên tiếp · Chưa báo lý do · Sale Lan cần follow ngay',
+    nang_luc: 'Nắm chắc BCC', ky_nang_yeu: 'Kanji',
+    xep_loai: 'Trung bình', jlpt_da_thi: 'Chưa từng thi',
+    nganh_nghe: 'IT Engineer', loai_visa: 'Kỹ sư',
+    muc_tieu: 'Sang Nhật 2026', nguyen_vong: 'Lên N2',
+    sang_nhat: 'Có dự định', tuoi: 26,
+    diem_bt_t1: '7.5/10', diem_bt_t2: '5.2/10',
+    cc_t1: 88, cc_t2: 62,
+    danh_gia_chung: 'Đang sa sút T2', ket_qua_jlpt: 'Chưa thi',
+    care_logs: [
+      { van_de: 'Vắng 3 buổi liên tiếp, chưa báo lý do', ngay_cham: '15/03/26', hinh_thuc: 'Zalo', nguoi_cham: 'Lan Anh', phan_ung: 'Chưa xử lý' },
+      { van_de: 'Điểm bài T2 thấp, hỗ trợ thêm Kanji', ngay_cham: '10/03/26', hinh_thuc: 'Gọi điện', nguoi_cham: 'GV Ngọc Hạnh', phan_ung: 'Đang theo' },
+      { van_de: 'HV phản hồi tích cực, sẽ cố gắng hơn', ngay_cham: '01/03/26', hinh_thuc: 'Zalo', nguoi_cham: 'Lan Anh', phan_ung: 'Tích cực' },
+    ]
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id') || params.get('customer_id');
+
+  try {
+    let hv;
+    if (SCRIPT_URL.includes('YOUR_SCRIPT_ID') || !id) {
+      // Demo mode
+      await new Promise(r => setTimeout(r, 800));
+      hv = getDemoData(id);
+    } else {
+      hv = await fetchHV(id);
+    }
+    render(hv);
+  } catch (err) {
+    document.getElementById('main-content').innerHTML = `
+      <div class="error-box">
+        <h3>Không tải được dữ liệu</h3>
+        <p>ID: ${id || 'không có'}<br>Lỗi: ${err.message}<br><br>
+        Kiểm tra lại SCRIPT_URL và quyền truy cập Apps Script.</p>
+      </div>`;
+  } finally {
+    document.getElementById('loading').style.opacity = '0';
+    setTimeout(() => {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('app').classList.add('ready');
+    }, 400);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
