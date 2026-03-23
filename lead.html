@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Card — Sensei Nihongo CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #C8102E;
+    --red-dark: #9e0b22;
+    --red-light: #fdecea;
+    --red-mid: #f5c0c7;
+    --ink: #1a1a1a;
+    --ink2: #444;
+    --ink3: #888;
+    --border: #e8e4e0;
+    --bg: #faf9f7;
+    --white: #ffffff;
+    --gold: #d4a017;
+    --gold-bg: #fdf8ec;
+    --green: #1a7a4a;
+    --green-bg: #edf7f2;
+    --orange: #d45f00;
+    --orange-bg: #fff4eb;
+    --blue: #1a5fa8;
+    --blue-bg: #eaf2fc;
+    --gray-bg: #f2f1ef;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── LOADING ── */
+  #loading {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; gap: 14px;
+    background: var(--bg);
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--red-mid);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { color: var(--ink3); font-size: 13px; font-weight: 400; }
+
+  /* ── ERROR ── */
+  #error {
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh; gap: 10px; padding: 24px;
+    text-align: center;
+  }
+  #error .err-icon { font-size: 40px; }
+  #error h3 { font-size: 16px; font-weight: 600; color: var(--ink); }
+  #error p { font-size: 13px; color: var(--ink3); }
+
+  /* ── MAIN CARD ── */
+  #card { display: none; padding: 0 0 32px; animation: fadeUp .4s ease both; }
+  @keyframes fadeUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+
+  /* Header strip */
+  .card-header {
+    background: var(--red);
+    padding: 20px 20px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-header::before {
+    content: '日';
+    position: absolute; right: -10px; top: -20px;
+    font-size: 120px; color: rgba(255,255,255,0.06);
+    font-weight: 700; pointer-events: none;
+  }
+  .header-top {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 12px;
+  }
+  .lead-name {
+    font-size: 20px; font-weight: 700;
+    color: #fff; line-height: 1.3;
+    flex: 1;
+  }
+  .d-badge {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.35);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px; font-weight: 600;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .d-badge.d7 { background: var(--gold); border-color: var(--gold); color: #fff; }
+  .d-badge.d6 { background: #28a745; border-color: #28a745; }
+  .d-badge.d5 { background: #fd7e14; border-color: #fd7e14; }
+  .d-badge.d4 { background: #4a90d9; border-color: #4a90d9; }
+
+  .header-meta {
+    display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .meta-item {
+    display: flex; align-items: center; gap: 5px;
+    color: rgba(255,255,255,0.82); font-size: 12px;
+  }
+  .meta-item svg { opacity: .7; flex-shrink: 0; }
+
+  /* Avatar blob */
+  .avatar-wrap {
+    position: relative; margin: -28px 20px 0;
+    display: flex; align-items: flex-end;
+    gap: 12px;
+  }
+  .avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--white);
+    border: 3px solid var(--white);
+    box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700;
+    color: var(--red);
+    flex-shrink: 0;
+  }
+  .source-chip {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px; font-weight: 600;
+    color: var(--ink2);
+    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    border: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  /* Body */
+  .card-body { padding: 16px 20px 0; }
+
+  /* Section */
+  .section { margin-bottom: 18px; }
+  .section-title {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink3);
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Info rows */
+  .info-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .info-grid.single { grid-template-columns: 1fr; }
+  .info-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+  .info-label {
+    font-size: 10px; font-weight: 600; color: var(--ink3);
+    text-transform: uppercase; letter-spacing: .05em;
+    margin-bottom: 3px;
+  }
+  .info-value {
+    font-size: 13px; font-weight: 500; color: var(--ink);
+    word-break: break-word; line-height: 1.4;
+  }
+  .info-value.empty { color: var(--ink3); font-weight: 400; font-style: italic; font-size: 12px; }
+  .info-value a { color: var(--red); text-decoration: none; }
+
+  /* Status pill row */
+  .status-row {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px;
+  }
+  .pill {
+    border-radius: 20px; padding: 5px 12px;
+    font-size: 11px; font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .pill-mkt  { background: var(--blue-bg);   color: var(--blue);   border-color: #bcd4f5; }
+  .pill-sale { background: var(--green-bg);  color: var(--green);  border-color: #b2ddc7; }
+  .pill-final{ background: var(--gold-bg);   color: var(--gold);   border-color: #f0d99a; }
+  .pill-gray { background: var(--gray-bg);   color: var(--ink3);   border-color: var(--border); }
+  .pill-red  { background: var(--red-light); color: var(--red);    border-color: var(--red-mid); }
+  .pill-orange{ background: var(--orange-bg);color: var(--orange); border-color: #f5cca5; }
+
+  /* Tags */
+  .tags-wrap { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tag {
+    background: var(--gray-bg);
+    border-radius: 6px; padding: 3px 8px;
+    font-size: 11px; color: var(--ink2); font-weight: 500;
+    border: 1px solid var(--border);
+  }
+
+  /* Notes */
+  .note-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--red);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 14px;
+    font-size: 13px; line-height: 1.6;
+    color: var(--ink2);
+  }
+  .note-box.empty { color: var(--ink3); font-style: italic; }
+
+  /* Timeline D-level */
+  .d-timeline {
+    display: flex; align-items: center;
+    gap: 0; overflow-x: auto; padding-bottom: 4px;
+  }
+  .d-step {
+    display: flex; flex-direction: column;
+    align-items: center; flex: 1; min-width: 32px;
+    position: relative;
+  }
+  .d-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--gray-bg); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--ink3);
+    position: relative; z-index: 1;
+    transition: all .2s;
+  }
+  .d-dot.active { background: var(--red); border-color: var(--red); color: #fff; }
+  .d-dot.done   { background: var(--red-light); border-color: var(--red-mid); color: var(--red); }
+  .d-dot.convert{ background: var(--gold); border-color: var(--gold); color: #fff; }
+  .d-label { font-size: 9px; color: var(--ink3); margin-top: 4px; font-weight: 500; text-align: center; white-space: nowrap; }
+  .d-label.active { color: var(--red); font-weight: 700; }
+  .d-connector {
+    height: 2px; flex: 1; background: var(--border);
+    margin-top: -22px; position: relative; z-index: 0;
+  }
+  .d-connector.done { background: var(--red-mid); }
+
+  /* Actions */
+  .actions { display: flex; gap: 8px; padding: 0 20px; flex-wrap: wrap; }
+  .btn {
+    flex: 1; min-width: 100px;
+    padding: 11px 14px; border-radius: 10px;
+    font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    transition: all .15s;
+  }
+  .btn-primary { background: var(--red); color: #fff; }
+  .btn-primary:hover { background: var(--red-dark); }
+  .btn-secondary { background: var(--white); color: var(--ink2); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--gray-bg); }
+  .btn-success { background: var(--green-bg); color: var(--green); border: 1px solid #b2ddc7; }
+  .btn-success:hover { background: #d5eee3; }
+
+  /* Pancake link */
+  .pancake-link {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    text-decoration: none; color: var(--ink);
+    transition: all .15s;
+  }
+  .pancake-link:hover { border-color: var(--red); }
+  .pancake-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: #FF6B35; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+  }
+  .pancake-icon span { color: #fff; font-size: 14px; font-weight: 700; }
+  .pancake-link .link-text { font-size: 12px; font-weight: 600; color: var(--ink2); }
+  .pancake-link .link-sub  { font-size: 11px; color: var(--ink3); }
+
+  /* Followup highlight */
+  .followup-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--orange-bg); color: var(--orange);
+    border: 1px solid #f5cca5; border-radius: 6px;
+    padding: 4px 10px; font-size: 11px; font-weight: 600;
+  }
+  .followup-badge.overdue { background: var(--red-light); color: var(--red); border-color: var(--red-mid); }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border); margin: 4px 0 18px; }
+
+  /* Lead ID */
+  .lead-id-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 20px;
+    background: var(--gray-bg);
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+  .lead-id-bar span { font-size: 10px; color: var(--ink3); font-weight: 500; font-family: monospace; }
+  .copy-btn {
+    font-size: 10px; color: var(--ink3); background: none;
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 2px 8px; cursor: pointer; font-family: 'Be Vietnam Pro', sans-serif;
+  }
+  .copy-btn:hover { color: var(--red); border-color: var(--red-mid); }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p>Đang tải thông tin lead...</p>
+</div>
+
+<div id="error">
+  <div class="err-icon">⚠️</div>
+  <h3>Không tìm thấy lead</h3>
+  <p id="error-msg">Vui lòng kiểm tra lại lead_id</p>
+</div>
+
+<div id="card"></div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbxkjTeb2CjTNqMPUYrbdXbg1rzWZOt-Sf_D2AEUjGyenoLwPMZR8GZ0JhxoOu3VkQRxyQ/exec';
+const TELEGRAM_BOT = '8604039602:AAHwZ9b79zmo8dJIGBpOFwaMQgAoZAejL8A';
+const TELEGRAM_CHAT = '-5076057476';
+
+const D_LABELS = ['D1','D2','D3','D4','D5','D6','D7'];
+const D_NAMES  = ['Chưa TC','Chưa TC','Quan tâm','Tư vấn','Báo giá','Đang chốt','Đã chốt'];
+
+function getParam(key) {
+  return new URLSearchParams(window.location.search).get(key) || '';
+}
+
+function dLevel(str) {
+  if (!str) return 2;
+  const m = String(str).match(/D?(\d+)/i);
+  return m ? parseInt(m[1]) : 2;
+}
+
+function formatDate(str) {
+  if (!str) return null;
+  const d = new Date(str);
+  if (isNaN(d)) return str;
+  return d.toLocaleDateString('vi-VN', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function isOverdue(str) {
+  if (!str) return false;
+  const d = new Date(str);
+  return !isNaN(d) && d < new Date();
+}
+
+function val(v, fallback='') { return v && String(v).trim() ? String(v).trim() : fallback; }
+function empty(v) { return !v || !String(v).trim(); }
+
+function initials(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return parts[parts.length - 1][0].toUpperCase();
+}
+
+function dBadgeClass(d) {
+  if (d >= 7) return 'd7';
+  if (d >= 6) return 'd6';
+  if (d >= 5) return 'd5';
+  if (d >= 4) return 'd4';
+  return '';
+}
+
+function sourceLabel(nguon) {
+  const n = (nguon || '').toLowerCase();
+  if (n.includes('facebook') || n.includes('fb')) return '📘 Facebook';
+  if (n.includes('zalo')) return '💬 Zalo';
+  if (n.includes('tiktok')) return '🎵 TikTok';
+  if (n.includes('web') || n.includes('landing')) return '🌐 Website';
+  if (n.includes('referral') || n.includes('giới thiệu')) return '🤝 Giới thiệu';
+  return nguon || '—';
+}
+
+function buildTimeline(currentD) {
+  const d = dLevel(currentD);
+  let html = '<div class="d-timeline">';
+  for (let i = 1; i <= 7; i++) {
+    if (i > 1) {
+      html += `<div class="d-connector${i-1 < d ? ' done' : ''}"></div>`;
+    }
+    let dotClass = '';
+    if (i === d) dotClass = d === 7 ? 'convert' : 'active';
+    else if (i < d) dotClass = 'done';
+    html += `<div class="d-step">
+      <div class="d-dot ${dotClass}">D${i}</div>
+      <div class="d-label${i === d ? ' active' : ''}">${D_NAMES[i-1]}</div>
+    </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function buildStatusRow(data) {
+  const pills = [];
+  if (data.tinh_trang_mkt)   pills.push(`<span class="pill pill-mkt">MKT: ${data.tinh_trang_mkt}</span>`);
+  if (data.tinh_trang_sale)  pills.push(`<span class="pill pill-sale">Sale: ${data.tinh_trang_sale}</span>`);
+  if (data.tinh_trang_final) pills.push(`<span class="pill pill-final">Final: ${data.tinh_trang_final}</span>`);
+  if (data.phan_loai_sale)   pills.push(`<span class="pill pill-gray">${data.phan_loai_sale}</span>`);
+  if (data.ngon_ngu)         pills.push(`<span class="pill pill-gray">🌐 ${data.ngon_ngu}</span>`);
+  return pills.length ? `<div class="status-row">${pills.join('')}</div>` : '';
+}
+
+function buildFollowup(ngay) {
+  if (!ngay) return '';
+  const overdue = isOverdue(ngay);
+  return `<div class="followup-badge ${overdue ? 'overdue' : ''}">
+    ${overdue ? '⚠️' : '📅'} Follow-up: ${formatDate(ngay)}${overdue ? ' (Quá hạn!)' : ''}
+  </div>`;
+}
+
+function renderCard(data) {
+  const d = dLevel(data.d_level);
+  const name = val(data.ten_mess, 'Chưa có tên');
+  const card = document.getElementById('card');
+
+  card.innerHTML = `
+    <!-- HEADER -->
+    <div class="card-header">
+      <div class="header-top">
+        <div class="lead-name">${name}</div>
+        <div class="d-badge ${dBadgeClass(d)}">${val(data.d_level, 'D2')}</div>
+      </div>
+      <div class="header-meta">
+        ${!empty(data.so_dien_thoai) ? `<span class="meta-item">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.81 19.79 19.79 0 01.07 2.18 2 2 0 012.07.07h3a2 2 0 012 1.72 12.08 12.08 0 00.66 2.57 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.08 12.08 0 002.57.66A2 2 0 0122 14.92z"/></svg>
+          ${data.so_dien_thoai}
+        </span>` : ''}
+        ${!empty(data.nguon) ? `<span class="meta-item">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+          ${sourceLabel(data.nguon)}
+        </span>` : ''}
+        ${!empty(data.ngay_vao) ? `<span class="meta-item">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          ${formatDate(data.ngay_vao)}
+        </span>` : ''}
+      </div>
+    </div>
+
+    <!-- AVATAR + SOURCE -->
+    <div class="avatar-wrap">
+      <div class="avatar">${initials(name)}</div>
+      ${!empty(data.sale_phu_trach) ? `<div class="source-chip">👤 ${data.sale_phu_trach}</div>` : ''}
+      ${!empty(data.ma_ads) ? `<div class="source-chip">📣 ${data.ma_ads}</div>` : ''}
+    </div>
+
+    <!-- BODY -->
+    <div class="card-body">
+
+      <!-- D-Level Timeline -->
+      <div class="section">
+        <div class="section-title">Hành trình chuyển đổi</div>
+        ${buildTimeline(data.d_level)}
+      </div>
+
+      <!-- Status Pills -->
+      ${buildStatusRow(data)}
+
+      <!-- Follow-up -->
+      ${buildFollowup(data.ngay_followup)}
+
+      <!-- Thông tin cơ bản -->
+      <div class="section">
+        <div class="section-title">Thông tin liên hệ</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Họ tên</div>
+            <div class="info-value ${empty(data.ten_mess) ? 'empty' : ''}">${val(data.ten_mess,'Chưa có')}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Số điện thoại</div>
+            <div class="info-value ${empty(data.so_dien_thoai) ? 'empty' : ''}">
+              ${!empty(data.so_dien_thoai) ? `<a href="tel:${data.so_dien_thoai}">${data.so_dien_thoai}</a>` : 'Chưa có'}
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Nguồn</div>
+            <div class="info-value ${empty(data.nguon) ? 'empty' : ''}">${sourceLabel(data.nguon) || 'Chưa rõ'}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Mã Ads</div>
+            <div class="info-value ${empty(data.ma_ads) ? 'empty' : ''}">${val(data.ma_ads,'—')}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nhu cầu -->
+      <div class="section">
+        <div class="section-title">Nhu cầu & Mục tiêu</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Sản phẩm quan tâm</div>
+            <div class="info-value ${empty(data.san_pham_quan_tam) ? 'empty' : ''}">${val(data.san_pham_quan_tam,'Chưa rõ')}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Ngôn ngữ</div>
+            <div class="info-value ${empty(data.ngon_ngu) ? 'empty' : ''}">${val(data.ngon_ngu,'—')}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Mục tiêu</div>
+            <div class="info-value ${empty(data.muc_tieu) ? 'empty' : ''}">${val(data.muc_tieu,'Chưa rõ')}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Phân loại sale</div>
+            <div class="info-value ${empty(data.phan_loai_sale) ? 'empty' : ''}">${val(data.phan_loai_sale,'—')}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Insight sale -->
+      <div class="section">
+        <div class="section-title">Insight từ sale</div>
+        <div class="info-grid single" style="margin-bottom:8px">
+          <div class="info-item">
+            <div class="info-label">Vấn đề của KH</div>
+            <div class="info-value ${empty(data.van_de) ? 'empty' : ''}">${val(data.van_de,'Chưa ghi nhận')}</div>
+          </div>
+        </div>
+        <div class="info-grid single" style="margin-bottom:8px">
+          <div class="info-item">
+            <div class="info-label">Mong muốn</div>
+            <div class="info-value ${empty(data.mong_muon) ? 'empty' : ''}">${val(data.mong_muon,'Chưa ghi nhận')}</div>
+          </div>
+        </div>
+        <div class="info-grid single">
+          <div class="info-item">
+            <div class="info-label">Lý do chưa chốt</div>
+            <div class="info-value ${empty(data.ly_do_chua_chot) ? 'empty' : ''}">${val(data.ly_do_chua_chot,'—')}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hành động & Gợi ý -->
+      ${!empty(data.hanh_dong_da_lam) || !empty(data.goi_y_resale) ? `
+      <div class="section">
+        <div class="section-title">Hoạt động & Gợi ý</div>
+        <div class="info-grid">
+          ${!empty(data.hanh_dong_da_lam) ? `<div class="info-item">
+            <div class="info-label">Đã làm</div>
+            <div class="info-value">${data.hanh_dong_da_lam}</div>
+          </div>` : ''}
+          ${!empty(data.goi_y_resale) ? `<div class="info-item">
+            <div class="info-label">Gợi ý resale</div>
+            <div class="info-value">${data.goi_y_resale}</div>
+          </div>` : ''}
+        </div>
+      </div>` : ''}
+
+      <!-- Pancake link -->
+      ${!empty(data.link_pancake) ? `
+      <div class="section">
+        <div class="section-title">Liên kết Pancake</div>
+        <a href="${data.link_pancake}" target="_blank" class="pancake-link">
+          <div class="pancake-icon"><span>P</span></div>
+          <div>
+            <div class="link-text">Mở hội thoại trong Pancake</div>
+            <div class="link-sub">Xem lịch sử chat đầy đủ</div>
+          </div>
+          <svg style="margin-left:auto;opacity:.4" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>` : ''}
+
+      <!-- Ghi chú -->
+      <div class="section">
+        <div class="section-title">Ghi chú sale</div>
+        <div class="note-box ${empty(data.ghi_chu) ? 'empty' : ''}">
+          ${val(data.ghi_chu, 'Chưa có ghi chú...')}
+        </div>
+      </div>
+
+      <!-- Convert info -->
+      ${!empty(data.ngay_convert) || !empty(data.customer_id_lien_ket) ? `
+      <div class="section">
+        <div class="section-title">Thông tin chuyển đổi</div>
+        <div class="info-grid">
+          ${!empty(data.ngay_convert) ? `<div class="info-item">
+            <div class="info-label">Ngày convert</div>
+            <div class="info-value">${formatDate(data.ngay_convert)}</div>
+          </div>` : ''}
+          ${!empty(data.customer_id_lien_ket) ? `<div class="info-item">
+            <div class="info-label">Mã học viên</div>
+            <div class="info-value"><a href="hv.html?id=${data.customer_id_lien_ket}">${data.customer_id_lien_ket}</a></div>
+          </div>` : ''}
+        </div>
+      </div>` : ''}
+
+    </div><!-- /card-body -->
+
+    <!-- ACTIONS -->
+    <div class="actions">
+      ${!empty(data.so_dien_thoai) ? `
+      <button class="btn btn-secondary" onclick="window.open('tel:${data.so_dien_thoai}')">
+        📞 Gọi
+      </button>` : ''}
+      ${!empty(data.link_pancake) ? `
+      <button class="btn btn-secondary" onclick="window.open('${data.link_pancake}','_blank')">
+        💬 Chat
+      </button>` : ''}
+      ${d < 7 ? `
+      <button class="btn btn-success" onclick="notifyFollowup('${val(data.lead_id)}','${name}','${val(data.so_dien_thoai)}')">
+        ✅ Nhắc Follow-up
+      </button>` : ''}
+    </div>
+
+    <!-- LEAD ID BAR -->
+    <div class="lead-id-bar">
+      <span>ID: ${val(data.lead_id,'—')}</span>
+      <button class="copy-btn" onclick="copyId('${val(data.lead_id)}')">Copy</button>
+    </div>
+  `;
+
+  document.getElementById('loading').style.display = 'none';
+  card.style.display = 'block';
+}
+
+function copyId(id) {
+  navigator.clipboard.writeText(id).catch(()=>{});
+  event.target.textContent = 'Đã copy!';
+  setTimeout(() => event.target.textContent = 'Copy', 1500);
+}
+
+async function notifyFollowup(leadId, name, sdt) {
+  const msg = `🔔 *Nhắc Follow-up Lead*\n👤 ${name}\n📞 ${sdt}\n🆔 ${leadId}\n⏰ ${new Date().toLocaleString('vi-VN')}`;
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT, text: msg, parse_mode: 'Markdown' })
+    });
+    alert('✅ Đã gửi nhắc nhở cho team!');
+  } catch(e) {
+    alert('Gửi thất bại, vui lòng thử lại');
+  }
+}
+
+async function loadLead() {
+  const leadId = getParam('id') || getParam('lead_id');
+
+  if (!leadId) {
+    // Demo mode với data mẫu
+    renderCard({
+      lead_id: 'LEAD-DEMO-001',
+      ten_mess: 'Nguyễn Thị Mai',
+      so_dien_thoai: '0987654321',
+      ngay_vao: '2025-03-15',
+      d_level: 'D4',
+      sale_phu_trach: 'Sale Chăm',
+      phan_loai_sale: 'Tiềm năng',
+      san_pham_quan_tam: 'Kaiwa N3',
+      nguon: 'Facebook',
+      ma_ads: 'FB-KW-2025-03',
+      tinh_trang_mkt: 'Đã tư vấn',
+      tinh_trang_sale: 'Đang theo dõi',
+      tinh_trang_final: 'Chưa chốt',
+      ngon_ngu: 'Tiếng Nhật',
+      muc_tieu: 'Thi JLPT N3',
+      van_de: 'Chưa có nền tảng N4',
+      mong_muon: 'Học nhanh 6 tháng',
+      hanh_dong_da_lam: 'Đã gửi lộ trình, tư vấn 2 lần',
+      ly_do_chua_chot: 'Đang cân nhắc học phí',
+      goi_y_resale: 'Offer ưu đãi cuối tháng',
+      ngay_followup: new Date(Date.now() - 86400000).toISOString(),
+      link_pancake: '',
+      ghi_chu: 'KH rất quan tâm, cần follow thêm về học phí. Đã hứa sẽ trả lời sau khi hỏi ý kiến gia đình.',
+      ngay_convert: '',
+      customer_id_lien_ket: ''
+    });
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}?action=getLead&id=${encodeURIComponent(leadId)}`);
+    const data = await res.json();
+
+    if (data.error || !data.lead_id) {
+      document.getElementById('loading').style.display = 'none';
+      const err = document.getElementById('error');
+      err.style.display = 'flex';
+      document.getElementById('error-msg').textContent = data.error || 'Không tìm thấy lead: ' + leadId;
+      return;
+    }
+    renderCard(data);
+  } catch(e) {
+    document.getElementById('loading').style.display = 'none';
+    const err = document.getElementById('error');
+    err.style.display = 'flex';
+    document.getElementById('error-msg').textContent = 'Lỗi kết nối API. Kiểm tra lại Apps Script.';
+  }
+}
+
+loadLead();
+</script>
+</body>
+</html>
