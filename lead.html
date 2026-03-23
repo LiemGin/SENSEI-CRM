@@ -681,24 +681,40 @@ async function loadLead() {
     return;
   }
 
-  try {
-    const res = await fetch(`${API_URL}?action=getLead&id=${encodeURIComponent(leadId)}`);
-    const data = await res.json();
+  // JSONP để tránh CORS với Google Apps Script
+  const cbName = 'leadCb_' + Date.now();
+  const script = document.createElement('script');
 
-    if (data.error || !data.lead_id) {
-      document.getElementById('loading').style.display = 'none';
-      const err = document.getElementById('error');
-      err.style.display = 'flex';
-      document.getElementById('error-msg').textContent = data.error || 'Không tìm thấy lead: ' + leadId;
-      return;
-    }
-    renderCard(data);
-  } catch(e) {
+  const timer = setTimeout(() => {
+    cleanup();
+    showError('Timeout — Apps Script phản hồi quá chậm, thử lại.');
+  }, 15000);
+
+  function cleanup() {
+    clearTimeout(timer);
+    delete window[cbName];
+    if (script.parentNode) document.body.removeChild(script);
+  }
+
+  function showError(msg) {
     document.getElementById('loading').style.display = 'none';
     const err = document.getElementById('error');
     err.style.display = 'flex';
-    document.getElementById('error-msg').textContent = 'Lỗi kết nối API. Kiểm tra lại Apps Script.';
+    document.getElementById('error-msg').textContent = msg;
   }
+
+  window[cbName] = function(data) {
+    cleanup();
+    if (!data || data.error || !data.lead_id) {
+      showError(data?.error || 'Không tìm thấy lead: ' + leadId);
+      return;
+    }
+    renderCard(data);
+  };
+
+  script.src = `${API_URL}?action=getLead&id=${encodeURIComponent(leadId)}&callback=${cbName}`;
+  script.onerror = () => { cleanup(); showError('Không tải được API. Kiểm tra Apps Script.'); };
+  document.body.appendChild(script);
 }
 
 loadLead();
